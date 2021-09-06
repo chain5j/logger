@@ -42,6 +42,10 @@ type Formatter struct {
 
 // Format an log entry
 func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
+	module := logger.ToString(entry.Data[logger.FieldKeyModule])
+	if !f.isPrint(module) {
+		return []byte(""), nil
+	}
 	levelColor := 0
 	if f.UseColor {
 		levelColor = getColorByLevel(entry.Level)
@@ -50,10 +54,6 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 	timestampFormat := f.TimestampFormat
 	if timestampFormat == "" {
 		timestampFormat = logger.DefaultTermTimestampFormat
-	}
-	module := logger.ToString(entry.Data[logger.FieldKeyModule])
-	if !f.isPrint(module) {
-		return []byte(""), nil
 	}
 
 	// output buffer

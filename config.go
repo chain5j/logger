@@ -56,9 +56,8 @@ type ConsoleLogConfig struct {
 }
 
 type FileLogConfig struct {
-	Level   Lvl    `json:"level" mapstructure:"level"`     // log level
-	Modules string `json:"modules" mapstructure:"modules"` // need to show modules。"*":all
-	Format  string `json:"format" mapstructure:"format"`   // format
+	Level  Lvl    `json:"level" mapstructure:"level"`   // log level
+	Format string `json:"format" mapstructure:"format"` // format
 
 	Save     bool   `json:"save" mapstructure:"save"`           // whether save file
 	FilePath string `json:"file_path" mapstructure:"file_path"` // filepath
@@ -69,13 +68,6 @@ type FileLogConfig struct {
 }
 
 func (c *ConsoleLogConfig) GetModules() []string {
-	if c.Modules == "" {
-		return []string{"*"}
-	}
-	return strings.Split(c.Modules, ",")
-}
-
-func (c *FileLogConfig) GetModules() []string {
 	if c.Modules == "" {
 		return []string{"*"}
 	}

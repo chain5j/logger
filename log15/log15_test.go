@@ -13,14 +13,14 @@ func TestLog(t *testing.T) {
 	log := InitWithConfig(&logger.LogConfig{
 		Console: logger.ConsoleLogConfig{
 			Level:    4,
-			Modules:  "*",
+			Modules:  "Info",
 			ShowPath: false,
 			UseColor: true,
 			Console:  true,
 		},
 		File: logger.FileLogConfig{
 			Level:    4,
-			Modules:  "*",
+			Modules:  "Debug",
 			Save:     true,
 			FilePath: "./logs",
 			FileName: "log.json",

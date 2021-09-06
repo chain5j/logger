@@ -29,6 +29,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"unicode/utf8"
 )
 
@@ -50,6 +51,9 @@ func putSliceEncoder(e *sliceArrayEncoder) {
 type consoleEncoder struct {
 	config *logger.LogConfig
 	*jsonEncoder
+
+	modules    []string
+	modulesReg atomic.Value
 }
 
 // NewConsoleEncoder creates an encoder whose output is designed for human -
@@ -61,15 +65,28 @@ type consoleEncoder struct {
 // encoder configuration, it will omit any element whose key is set to the empty
 // string.
 func NewConsoleEncoder(config *logger.LogConfig, cfg zapcore.EncoderConfig) zapcore.Encoder {
-	return consoleEncoder{config, newJSONEncoder(cfg, false)}
+	return consoleEncoder{
+		config:      config,
+		jsonEncoder: newJSONEncoder(cfg, false),
+		modules:     config.Console.GetModules(),
+	}
 }
 
 func (c consoleEncoder) Clone() zapcore.Encoder {
-	return consoleEncoder{c.config, c.jsonEncoder.Clone().(*jsonEncoder)}
+	return consoleEncoder{
+		config:      c.config,
+		jsonEncoder: c.jsonEncoder.Clone().(*jsonEncoder),
+		modules:     c.modules,
+		modulesReg:  c.modulesReg,
+	}
 }
 
 func (c consoleEncoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer.Buffer, error) {
 	line := bufferpool.Get()
+	module := ent.LoggerName
+	if !c.isPrint(module) {
+		return line, nil
+	}
 
 	arr := getSliceEncoder()
 	levelColor := 0
@@ -160,6 +177,28 @@ func (c consoleEncoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (
 		line.AppendString(zapcore.DefaultLineEnding)
 	}
 	return line, nil
+}
+
+func (c consoleEncoder) isPrint(module string) bool {
+	if c.modules == nil || len(c.modules) == 0 {
+		return true
+	}
+	var modulesRegMap sync.Map
+	if c.modulesReg.Load() != nil {
+		modulesRegMap = c.modulesReg.Load().(sync.Map)
+	} else {
+		for _, s := range c.modules {
+			modulesRegMap.Store(s, s)
+		}
+		c.modulesReg.Store(modulesRegMap)
+	}
+	if _, ok := modulesRegMap.Load("*"); ok {
+		return true
+	}
+	if _, ok := modulesRegMap.Load(module); ok {
+		return true
+	}
+	return false
 }
 
 func (c consoleEncoder) writeContext(line *buffer.Buffer, extra []zapcore.Field, levelColor int) {
