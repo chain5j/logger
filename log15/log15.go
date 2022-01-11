@@ -14,6 +14,7 @@ var (
 )
 
 func init() {
+	setLog15(logger.DefaultLogConfig)
 	logger.RegisterLog(root)
 }
 
@@ -22,6 +23,12 @@ type log15 struct {
 }
 
 func InitWithConfig(config *logger.LogConfig) logger.Logger {
+	setLog15(config)
+
+	return root
+}
+
+func setLog15(config *logger.LogConfig) {
 	logConfig := &log.LogConfig{
 		Console: log.ConsoleLogConfig{
 			Level:    int(config.Console.Level),
@@ -33,7 +40,6 @@ func InitWithConfig(config *logger.LogConfig) logger.Logger {
 		},
 		File: log.FileLogConfig{
 			Level:    int(config.File.Level),
-			Modules:  config.File.Modules,
 			Format:   config.File.Format,
 			Save:     config.File.Save,
 			FilePath: config.File.FilePath,
@@ -50,8 +56,6 @@ func InitWithConfig(config *logger.LogConfig) logger.Logger {
 	} else {
 		log.InitLogsWithFormat(logConfig, nil)
 	}
-
-	return root
 }
 
 func (l *log15) Name() string {
@@ -68,7 +72,7 @@ func (l *log15) Trace(msg string, ctx ...interface{}) {
 	if l.logger != nil {
 		l.logger.Trace(msg, ctx...)
 	} else {
-		root.Trace(msg, ctx...)
+		log.Trace(msg, ctx...)
 	}
 }
 
@@ -76,7 +80,7 @@ func (l *log15) Debug(msg string, ctx ...interface{}) {
 	if l.logger != nil {
 		l.logger.Debug(msg, ctx...)
 	} else {
-		root.Debug(msg, ctx...)
+		log.Debug(msg, ctx...)
 	}
 }
 
@@ -84,7 +88,7 @@ func (l *log15) Info(msg string, ctx ...interface{}) {
 	if l.logger != nil {
 		l.logger.Info(msg, ctx...)
 	} else {
-		root.Info(msg, ctx...)
+		log.Info(msg, ctx...)
 	}
 }
 
@@ -92,7 +96,7 @@ func (l *log15) Warn(msg string, ctx ...interface{}) {
 	if l.logger != nil {
 		l.logger.Warn(msg, ctx...)
 	} else {
-		root.Warn(msg, ctx...)
+		log.Warn(msg, ctx...)
 	}
 }
 
@@ -100,7 +104,7 @@ func (l *log15) Error(msg string, ctx ...interface{}) {
 	if l.logger != nil {
 		l.logger.Error(msg, ctx...)
 	} else {
-		root.Error(msg, ctx...)
+		log.Error(msg, ctx...)
 	}
 }
 

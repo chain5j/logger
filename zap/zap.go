@@ -5,16 +5,20 @@ package zap
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/chain5j/logger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"os"
-	"time"
 )
 
 var (
 	_    logger.Logger = new(log)
-	root               = &log{Logger: zap.New(nil)}
+	root               = &log{
+		Logger: getZapLogger(logger.DefaultLogConfig),
+		fields: make([]zap.Field, 0),
+	}
 )
 
 func init() {
@@ -22,55 +26,60 @@ func init() {
 }
 
 type log struct {
-	//只能输出结构化日志，但是性能要高于 SugaredLogger
-	*zap.Logger
-	////可以输出 结构化日志、非结构化日志。性能低于 zap.Logger
-	//sugarLogger *zap.SugaredLogger
+	*zap.Logger // 只能输出结构化日志，但是性能要高于 SugaredLogger
+	// sugarLogger *zap.SugaredLogger // 可以输出 结构化日志、非结构化日志。性能低于 zap.Logger
+	fields []zap.Field
 }
 
 // InitWithConfig 初始化日志 logger
 func InitWithConfig(config *logger.LogConfig) logger.Logger {
+	zapLogger := getZapLogger(config)
+	*root.Logger = *zapLogger
+	return root
+}
+
+func getZapLogger(config *logger.LogConfig) *zap.Logger {
 	var callerKey string
 	if config.Console.ShowPath {
 		callerKey = logger.FieldKeyFile
 	}
 	zapConfig := zapcore.EncoderConfig{
-		MessageKey: logger.FieldKeyMsg,   //结构化（json）输出：msg的key
-		LevelKey:   logger.FieldKeyLevel, //结构化（json）输出：日志级别的key（INFO，WARN，ERROR等）
-		TimeKey:    logger.FieldKeyTime,  //结构化（json）输出：时间的key（INFO，WARN，ERROR等）
+		MessageKey: logger.FieldKeyMsg,   // 结构化（json）输出：msg的key
+		LevelKey:   logger.FieldKeyLevel, // 结构化（json）输出：日志级别的key（INFO，WARN，ERROR等）
+		TimeKey:    logger.FieldKeyTime,  // 结构化（json）输出：时间的key（INFO，WARN，ERROR等）
 		NameKey:    logger.FieldKeyModule,
 
-		CallerKey: callerKey, //结构化（json）输出：打印日志的文件对应的Key
-		//EncodeLevel:  zapcore.CapitalColorLevelEncoder, //将日志级别转换成大写（INFO，WARN，ERROR等）
-		EncodeCaller: zapcore.ShortCallerEncoder, //采用短文件路径编码输出（test/main.go:14 ）
+		CallerKey: callerKey, // 结构化（json）输出：打印日志的文件对应的Key
+		// EncodeLevel:  zapcore.CapitalColorLevelEncoder, //将日志级别转换成大写（INFO，WARN，ERROR等）
+		EncodeCaller: zapcore.ShortCallerEncoder, // 采用短文件路径编码输出（test/main.go:14 ）
 		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendString("[" + t.Format(logger.DefaultTermTimestampFormat) + "]")
-		}, //输出的时间格式
-		//EncodeName: func(loggerName string, enc zapcore.PrimitiveArrayEncoder) {
+		}, // 输出的时间格式
+		// EncodeName: func(loggerName string, enc zapcore.PrimitiveArrayEncoder) {
 		//	enc.AppendString(loggerName)
-		//},
+		// },
 		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendInt64(int64(d) / 1000000)
 		},
 	}
 
 	filConfig := zapcore.EncoderConfig{
-		MessageKey: logger.FieldKeyMsg,   //结构化（json）输出：msg的key
-		LevelKey:   logger.FieldKeyLevel, //结构化（json）输出：日志级别的key（INFO，WARN，ERROR等）
-		TimeKey:    logger.FieldKeyTime,  //结构化（json）输出：时间的key（INFO，WARN，ERROR等）
+		MessageKey: logger.FieldKeyMsg,   // 结构化（json）输出：msg的key
+		LevelKey:   logger.FieldKeyLevel, // 结构化（json）输出：日志级别的key（INFO，WARN，ERROR等）
+		TimeKey:    logger.FieldKeyTime,  // 结构化（json）输出：时间的key（INFO，WARN，ERROR等）
 
-		EncodeLevel:  zapcore.LowercaseLevelEncoder, //将日志级别转换成大写（INFO，WARN，ERROR等）
-		EncodeCaller: zapcore.ShortCallerEncoder,    //采用短文件路径编码输出（test/main.go:14 ）
+		EncodeLevel:  zapcore.LowercaseLevelEncoder, // 将日志级别转换成大写（INFO，WARN，ERROR等）
+		EncodeCaller: zapcore.ShortCallerEncoder,    // 采用短文件路径编码输出（test/main.go:14 ）
 		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendString(t.Format(logger.DefaultTimestampFormat))
-		}, //输出的时间格式
+		}, // 输出的时间格式
 		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendInt64(int64(d) / 1000000)
 		},
 	}
 
 	consoleLogLevel := getZapLevel(config.Console.Level)
-	//自定义日志级别：自定义Info级别
+	// 自定义日志级别：自定义Info级别
 	fileLogLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= getZapLevel(config.File.Level)
 	})
@@ -94,8 +103,7 @@ func InitWithConfig(config *logger.LogConfig) logger.Logger {
 	core := zapcore.NewTee(tees...)
 
 	zapLog := zap.New(core, opts...)
-	root.Logger = zapLog
-	return root
+	return zapLog
 }
 
 func (l *log) Name() string {
@@ -104,12 +112,12 @@ func (l *log) Name() string {
 
 func (l *log) New(module string, ctx ...interface{}) logger.Logger {
 	newLog := l.Logger.Named(module)
-	fields := make([]zap.Field, 0)
-	fields = append(fields, l.getFields(ctx)...)
+	fields := append(l.fields, l.getFields(ctx)...)
 	newLog = newLog.With(fields...)
 	return &log{
 		Logger: newLog,
-		//sugarLogger: newLog.Sugar(),
+		// sugarLogger: newLog.Sugar(),
+		fields: fields,
 	}
 }
 
@@ -127,9 +135,10 @@ func (l *log) getFields(ctx []interface{}) []zap.Field {
 			ctx = append(ctx, "Null")
 		}
 	}
+
 	files := make([]zap.Field, 0)
 	for i := 0; i < len(ctx); i = i + 2 {
-		files = append(files, zap.String(logger.ToString(ctx[i]), logger.ToString(ctx[i+1])))
+		files = append(files, zap.Any(logger.ToString(ctx[i]), ctx[i+1]))
 	}
 	return files
 }

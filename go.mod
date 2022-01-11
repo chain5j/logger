@@ -10,7 +10,5 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/sirupsen/logrus v1.8.1
-	go.uber.org/zap v1.19.0
-	golang.org/x/sys v0.0.0-20200219091948-cb0a6d8edb6c // indirect
-	golang.org/x/tools v0.0.0-20200221224223-e1da425f72fd // indirect
+	go.uber.org/zap v1.20.0
 )

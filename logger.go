@@ -62,9 +62,6 @@ func SwitchLog(logKitName string) {
 
 // New 方法用到root，因此此方法不能够应用到init()中，除非先执行了RegisterLog
 func New(module string, ctx ...interface{}) Logger {
-	if root == nil {
-		log.Fatalln("root logger is nil")
-	}
 	return root.New(module, ctx...)
 }
 

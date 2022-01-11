@@ -21,8 +21,9 @@
 package zap
 
 import (
-	"go.uber.org/zap/zapcore"
 	"time"
+
+	"go.uber.org/zap/zapcore"
 )
 
 // MapObjectEncoder is an ObjectEncoder backed by a simple

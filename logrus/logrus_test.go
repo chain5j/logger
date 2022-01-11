@@ -5,23 +5,24 @@
 package logrus
 
 import (
-	"github.com/chain5j/logger"
+	syslog "log"
 	"sync"
 	"testing"
+
+	"github.com/chain5j/logger"
 )
 
 func TestLog(t *testing.T) {
-	log := InitWithConfig(&logger.LogConfig{
+	log1 := InitWithConfig(&logger.LogConfig{
 		Console: logger.ConsoleLogConfig{
 			Level:    4,
-			Modules:  "Info",
+			Modules:  "*",
 			ShowPath: false,
 			UseColor: true,
 			Console:  true,
 		},
 		File: logger.FileLogConfig{
 			Level:    4,
-			Modules:  "Debug",
 			Save:     true,
 			FilePath: "./logs",
 			FileName: "log.json",
@@ -30,15 +31,15 @@ func TestLog(t *testing.T) {
 	var wg sync.WaitGroup
 	startTime := logger.CurrentTime()
 
-	debugLog := log.New("Debug")
-	infoLog := log.New("Info")
-	errorLog := log.New("Error")
+	debugLog := log1.New("Debug", "Debug", "Debug")
+	infoLog := log1.New("Info", "Info", "Info")
+	errorLog := log1.New("Error", "Error", "Error")
 
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			log.Info("=========================", "i", i)
+			syslog.Println("=========================", "i", i)
 			for j := 0; j < 100; j++ {
 				debugLog.Debug("test1 debug", "i", i, "j", j)
 				if i%9 == 0 {
@@ -51,5 +52,5 @@ func TestLog(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
-	log.Info("总耗时", "elapsed", logger.CurrentTime()-startTime)
+	log1.Info("总耗时", "elapsed", logger.CurrentTime()-startTime)
 }

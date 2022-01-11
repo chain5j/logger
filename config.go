@@ -39,6 +39,16 @@ func (l Lvl) String() string {
 	}
 }
 
+var DefaultLogConfig = &LogConfig{
+	Console: ConsoleLogConfig{
+		Level:    2,
+		Modules:  "*",
+		ShowPath: false,
+		UseColor: false,
+		Console:  true,
+	},
+}
+
 // LogConfig log config
 type LogConfig struct {
 	Console ConsoleLogConfig `json:"console" mapstructure:"console"`

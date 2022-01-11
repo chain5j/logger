@@ -7,14 +7,15 @@ package logrus
 import (
 	"bytes"
 	"fmt"
-	"github.com/chain5j/logger"
-	"github.com/sirupsen/logrus"
 	"runtime"
 	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"unicode/utf8"
+
+	"github.com/chain5j/logger"
+	"github.com/sirupsen/logrus"
 )
 
 // Formatter - logrus formatter, implements logrus.Formatter

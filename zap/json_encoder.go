@@ -23,13 +23,15 @@ package zap
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/chain5j/logger/zap/bufferpool"
-	"go.uber.org/zap/buffer"
-	"go.uber.org/zap/zapcore"
 	"math"
 	"sync"
 	"time"
 	"unicode/utf8"
+
+	"github.com/chain5j/logger/zap/bufferpool"
+	"go.uber.org/zap"
+	"go.uber.org/zap/buffer"
+	"go.uber.org/zap/zapcore"
 )
 
 // For JSON-escaping; see jsonEncoder.safeAddString below.
@@ -62,6 +64,8 @@ type jsonEncoder struct {
 	spaced         bool // include spaces after colons and commas
 	openNamespaces int
 
+	files []zapcore.Field
+
 	// for encoding generic values by reflection
 	reflectBuf *buffer.Buffer
 	reflectEnc *json.Encoder
@@ -86,49 +90,69 @@ func newJSONEncoder(cfg zapcore.EncoderConfig, spaced bool) *jsonEncoder {
 		EncoderConfig: &cfg,
 		buf:           bufferpool.Get(),
 		spaced:        spaced,
+
+		files: make([]zapcore.Field, 0),
 	}
 }
 
 func (enc *jsonEncoder) AddArray(key string, arr zapcore.ArrayMarshaler) error {
+	enc.files = append(enc.files, zap.Array(key, arr))
+
 	enc.addKey(key)
 	return enc.AppendArray(arr)
 }
 
 func (enc *jsonEncoder) AddObject(key string, obj zapcore.ObjectMarshaler) error {
+	enc.files = append(enc.files, zap.Object(key, obj))
+
 	enc.addKey(key)
 	return enc.AppendObject(obj)
 }
 
 func (enc *jsonEncoder) AddBinary(key string, val []byte) {
+	enc.files = append(enc.files, zap.Binary(key, val))
+
 	enc.AddString(key, base64.StdEncoding.EncodeToString(val))
 }
 
 func (enc *jsonEncoder) AddByteString(key string, val []byte) {
+	enc.files = append(enc.files, zap.ByteString(key, val))
+
 	enc.addKey(key)
 	enc.AppendByteString(val)
 }
 
 func (enc *jsonEncoder) AddBool(key string, val bool) {
+	enc.files = append(enc.files, zap.Bool(key, val))
+
 	enc.addKey(key)
 	enc.AppendBool(val)
 }
 
 func (enc *jsonEncoder) AddComplex128(key string, val complex128) {
+	enc.files = append(enc.files, zap.Complex128(key, val))
+
 	enc.addKey(key)
 	enc.AppendComplex128(val)
 }
 
 func (enc *jsonEncoder) AddDuration(key string, val time.Duration) {
+	enc.files = append(enc.files, zap.Duration(key, val))
+
 	enc.addKey(key)
 	enc.AppendDuration(val)
 }
 
 func (enc *jsonEncoder) AddFloat64(key string, val float64) {
+	enc.files = append(enc.files, zap.Float64(key, val))
+
 	enc.addKey(key)
 	enc.AppendFloat64(val)
 }
 
 func (enc *jsonEncoder) AddInt64(key string, val int64) {
+	enc.files = append(enc.files, zap.Int64(key, val))
+
 	enc.addKey(key)
 	enc.AppendInt64(val)
 }
@@ -146,6 +170,8 @@ func (enc *jsonEncoder) resetReflectBuf() {
 }
 
 func (enc *jsonEncoder) AddReflected(key string, obj interface{}) error {
+	enc.files = append(enc.files, zap.Reflect(key, obj))
+
 	enc.resetReflectBuf()
 	err := enc.reflectEnc.Encode(obj)
 	if err != nil {
@@ -164,16 +190,22 @@ func (enc *jsonEncoder) OpenNamespace(key string) {
 }
 
 func (enc *jsonEncoder) AddString(key, val string) {
+	enc.files = append(enc.files, zap.String(key, val))
+
 	enc.addKey(key)
 	enc.AppendString(val)
 }
 
 func (enc *jsonEncoder) AddTime(key string, val time.Time) {
+	enc.files = append(enc.files, zap.Time(key, val))
+
 	enc.addKey(key)
 	enc.AppendTime(val)
 }
 
 func (enc *jsonEncoder) AddUint64(key string, val uint64) {
+	enc.files = append(enc.files, zap.Uint64(key, val))
+
 	enc.addKey(key)
 	enc.AppendUint64(val)
 }
@@ -305,6 +337,10 @@ func (enc *jsonEncoder) clone() *jsonEncoder {
 	clone.spaced = enc.spaced
 	clone.openNamespaces = enc.openNamespaces
 	clone.buf = bufferpool.Get()
+
+	files := make([]zapcore.Field, len(enc.files))
+	copy(files, enc.files)
+	clone.files = files
 	return clone
 }
 

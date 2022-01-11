@@ -23,14 +23,15 @@ package zap
 import (
 	"bytes"
 	"fmt"
-	"github.com/chain5j/logger"
-	"github.com/chain5j/logger/zap/bufferpool"
-	"go.uber.org/zap/buffer"
-	"go.uber.org/zap/zapcore"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"unicode/utf8"
+
+	"github.com/chain5j/logger"
+	"github.com/chain5j/logger/zap/bufferpool"
+	"go.uber.org/zap/buffer"
+	"go.uber.org/zap/zapcore"
 )
 
 var _sliceEncoderPool = sync.Pool{
@@ -65,15 +66,15 @@ type consoleEncoder struct {
 // encoder configuration, it will omit any element whose key is set to the empty
 // string.
 func NewConsoleEncoder(config *logger.LogConfig, cfg zapcore.EncoderConfig) zapcore.Encoder {
-	return consoleEncoder{
+	return &consoleEncoder{
 		config:      config,
 		jsonEncoder: newJSONEncoder(cfg, false),
 		modules:     config.Console.GetModules(),
 	}
 }
 
-func (c consoleEncoder) Clone() zapcore.Encoder {
-	return consoleEncoder{
+func (c *consoleEncoder) Clone() zapcore.Encoder {
+	return &consoleEncoder{
 		config:      c.config,
 		jsonEncoder: c.jsonEncoder.Clone().(*jsonEncoder),
 		modules:     c.modules,
@@ -81,8 +82,9 @@ func (c consoleEncoder) Clone() zapcore.Encoder {
 	}
 }
 
-func (c consoleEncoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer.Buffer, error) {
+func (c *consoleEncoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer.Buffer, error) {
 	line := bufferpool.Get()
+	// line.AppendString(c.jsonEncoder.buf.String())
 	module := ent.LoggerName
 	if !c.isPrint(module) {
 		return line, nil
@@ -162,6 +164,7 @@ func (c consoleEncoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (
 	}
 
 	// write fields
+	c.writeContext(line, c.jsonEncoder.files, levelColor)
 	c.writeContext(line, fields, levelColor)
 
 	// If there's no stacktrace key, honor that; this allows users to force
@@ -179,7 +182,7 @@ func (c consoleEncoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (
 	return line, nil
 }
 
-func (c consoleEncoder) isPrint(module string) bool {
+func (c *consoleEncoder) isPrint(module string) bool {
 	if c.modules == nil || len(c.modules) == 0 {
 		return true
 	}
@@ -201,7 +204,7 @@ func (c consoleEncoder) isPrint(module string) bool {
 	return false
 }
 
-func (c consoleEncoder) writeContext(line *buffer.Buffer, extra []zapcore.Field, levelColor int) {
+func (c *consoleEncoder) writeContext(line *buffer.Buffer, extra []zapcore.Field, levelColor int) {
 	for _, field := range extra {
 		line.AppendString(" ")
 		if levelColor > 0 {
@@ -219,7 +222,7 @@ func (c consoleEncoder) writeContext(line *buffer.Buffer, extra []zapcore.Field,
 	}
 }
 
-func (c consoleEncoder) addTabIfNecessary(line *buffer.Buffer) {
+func (c *consoleEncoder) addTabIfNecessary(line *buffer.Buffer) {
 	if line.Len() > 0 {
 		line.AppendByte('\t')
 	}

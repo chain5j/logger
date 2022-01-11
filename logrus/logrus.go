@@ -5,12 +5,13 @@
 package logrus
 
 import (
-	"github.com/chain5j/logger"
-	"github.com/rifflock/lfshook"
-	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"strings"
+
+	"github.com/chain5j/logger"
+	"github.com/rifflock/lfshook"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -19,6 +20,7 @@ var (
 )
 
 func init() {
+	InitWithConfig(logger.DefaultLogConfig)
 	logger.RegisterLog(root)
 }
 

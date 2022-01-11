@@ -9,7 +9,7 @@
 - 可根据module选择性输出
 
 ## 项目地址
-Github: https://github.com/chain5j/sync_eth
+Github: https://github.com/chain5j/logger
 
 ## 使用
 
@@ -70,6 +70,9 @@ func TestLog(t *testing.T) {
 ```
 
 ## LICENSE
-Please refer to [LICENSE](LICENSE) file.
+`logger` 的源码允许用户在遵循 [Apache 2.0 开源证书](LICENSE) 规则的前提下使用。
 
-Copyright@2020 chain5j
+## 版权
+Copyright@2022 chain5j
+
+![chain5j](./chain5j.png)
