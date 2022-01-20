@@ -4,7 +4,8 @@
 package logger
 
 import (
-	"log"
+	"fmt"
+	"os"
 	"strings"
 	"sync"
 )
@@ -65,69 +66,125 @@ func New(module string, ctx ...interface{}) Logger {
 	return root.New(module, ctx...)
 }
 
-func getLogger() Logger {
-	if root == nil {
-		log.Fatalln("root logger is nil")
-	}
-	return root
-}
-
 func Trace(msg string, ctx ...interface{}) {
-	getLogger().Trace(msg, ctx...)
+	if root == nil {
+		return
+	}
+	root.Trace(msg, ctx...)
 }
 
 func Debug(msg string, ctx ...interface{}) {
-	getLogger().Debug(msg, ctx...)
+	if root == nil {
+		return
+	}
+	root.Debug(msg, ctx...)
 }
 
 func Info(msg string, ctx ...interface{}) {
-	getLogger().Info(msg, ctx...)
+	if root == nil {
+		return
+	}
+	root.Info(msg, ctx...)
 }
 
 func Warn(msg string, ctx ...interface{}) {
-	getLogger().Warn(msg, ctx...)
+	if root == nil {
+		return
+	}
+	root.Warn(msg, ctx...)
 }
 
 func Error(msg string, ctx ...interface{}) {
-	getLogger().Error(msg, ctx...)
+	if root == nil {
+		fmt.Println(msg, ctx)
+		return
+	}
+	root.Error(msg, ctx...)
 }
 
 func Crit(msg string, ctx ...interface{}) {
-	getLogger().Crit(msg, ctx...)
+	if root == nil {
+		fmt.Println(msg, ctx)
+		os.Exit(1)
+		return
+	}
+	root.Crit(msg, ctx...)
 }
 
 func Printf(format string, v ...interface{}) {
-	getLogger().Printf(format, v...)
+	if root == nil {
+		fmt.Printf(format, v...)
+		return
+	}
+	root.Printf(format, v...)
 }
 
 func Print(v ...interface{}) {
-	getLogger().Print(v...)
+	if root == nil {
+		fmt.Print(v...)
+		return
+	}
+	root.Print(v...)
 }
 
 func Println(v ...interface{}) {
-	getLogger().Println(v...)
+	if root == nil {
+		fmt.Println(v...)
+		return
+	}
+	root.Println(v...)
 }
 
 func Fatal(v ...interface{}) {
-	getLogger().Fatal(v...)
+	if root == nil {
+		fmt.Print(v...)
+		os.Exit(1)
+		return
+	}
+	root.Fatal(v...)
 }
 
 func Fatalf(format string, v ...interface{}) {
-	getLogger().Fatalf(format, v...)
+	if root == nil {
+		fmt.Printf(format, v...)
+		os.Exit(1)
+		return
+	}
+	root.Fatalf(format, v...)
 }
 
 func Fatalln(v ...interface{}) {
-	getLogger().Fatalln(v...)
+	if root == nil {
+		fmt.Println(v...)
+		os.Exit(1)
+		return
+	}
+	root.Fatalln(v...)
 }
 
 func Panic(v ...interface{}) {
-	getLogger().Panic(v...)
+	if root == nil {
+		fmt.Print(v...)
+		os.Exit(1)
+		return
+	}
+	root.Panic(v...)
 }
 
 func Panicf(format string, v ...interface{}) {
-	getLogger().Panicf(format, v...)
+	if root == nil {
+		fmt.Printf(format, v...)
+		os.Exit(1)
+		return
+	}
+	root.Panicf(format, v...)
 }
 
 func Panicln(v ...interface{}) {
-	getLogger().Panicln(v)
+	if root == nil {
+		fmt.Println(v...)
+		os.Exit(1)
+		return
+	}
+	root.Panicln(v)
 }
