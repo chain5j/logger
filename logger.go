@@ -4,8 +4,6 @@
 package logger
 
 import (
-	"fmt"
-	"os"
 	"strings"
 	"sync"
 )
@@ -61,130 +59,74 @@ func SwitchLog(logKitName string) {
 	}
 }
 
+func getRoot() Logger {
+	if root == nil {
+		root = initLog()
+	}
+	return root
+}
+
 // New 方法用到root，因此此方法不能够应用到init()中，除非先执行了RegisterLog
 func New(module string, ctx ...interface{}) Logger {
-	return root.New(module, ctx...)
+	return getRoot().New(module, ctx...)
 }
 
 func Trace(msg string, ctx ...interface{}) {
-	if root == nil {
-		return
-	}
-	root.Trace(msg, ctx...)
+	getRoot().Trace(msg, ctx...)
 }
 
 func Debug(msg string, ctx ...interface{}) {
-	if root == nil {
-		return
-	}
-	root.Debug(msg, ctx...)
+	getRoot().Debug(msg, ctx...)
 }
 
 func Info(msg string, ctx ...interface{}) {
-	if root == nil {
-		return
-	}
-	root.Info(msg, ctx...)
+	getRoot().Info(msg, ctx...)
 }
 
 func Warn(msg string, ctx ...interface{}) {
-	if root == nil {
-		return
-	}
-	root.Warn(msg, ctx...)
+	getRoot().Warn(msg, ctx...)
 }
 
 func Error(msg string, ctx ...interface{}) {
-	if root == nil {
-		fmt.Println(msg, ctx)
-		return
-	}
-	root.Error(msg, ctx...)
+	getRoot().Error(msg, ctx...)
 }
 
 func Crit(msg string, ctx ...interface{}) {
-	if root == nil {
-		fmt.Println(msg, ctx)
-		os.Exit(1)
-		return
-	}
-	root.Crit(msg, ctx...)
+	getRoot().Crit(msg, ctx...)
 }
 
 func Printf(format string, v ...interface{}) {
-	if root == nil {
-		fmt.Printf(format, v...)
-		return
-	}
-	root.Printf(format, v...)
+	getRoot().Printf(format, v...)
 }
 
 func Print(v ...interface{}) {
-	if root == nil {
-		fmt.Print(v...)
-		return
-	}
-	root.Print(v...)
+	getRoot().Print(v...)
 }
 
 func Println(v ...interface{}) {
-	if root == nil {
-		fmt.Println(v...)
-		return
-	}
-	root.Println(v...)
+	getRoot().Println(v...)
 }
 
 func Fatal(v ...interface{}) {
-	if root == nil {
-		fmt.Print(v...)
-		os.Exit(1)
-		return
-	}
-	root.Fatal(v...)
+	getRoot().Fatal(v...)
 }
 
 func Fatalf(format string, v ...interface{}) {
-	if root == nil {
-		fmt.Printf(format, v...)
-		os.Exit(1)
-		return
-	}
-	root.Fatalf(format, v...)
+	getRoot().Fatalf(format, v...)
 }
 
 func Fatalln(v ...interface{}) {
-	if root == nil {
-		fmt.Println(v...)
-		os.Exit(1)
-		return
-	}
-	root.Fatalln(v...)
+	getRoot().Fatalln(v...)
 }
 
 func Panic(v ...interface{}) {
-	if root == nil {
-		fmt.Print(v...)
-		os.Exit(1)
-		return
-	}
-	root.Panic(v...)
+	getRoot().Panic(v...)
 }
 
 func Panicf(format string, v ...interface{}) {
-	if root == nil {
-		fmt.Printf(format, v...)
-		os.Exit(1)
-		return
-	}
-	root.Panicf(format, v...)
+	getRoot().Panicf(format, v...)
 }
 
 func Panicln(v ...interface{}) {
-	if root == nil {
-		fmt.Println(v...)
-		os.Exit(1)
-		return
-	}
-	root.Panicln(v)
+	getRoot().Panicln(v)
 }

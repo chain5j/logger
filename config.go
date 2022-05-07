@@ -41,7 +41,7 @@ func (l Lvl) String() string {
 
 var DefaultLogConfig = &LogConfig{
 	Console: ConsoleLogConfig{
-		Level:    2,
+		Level:    3,
 		Modules:  "*",
 		ShowPath: false,
 		UseColor: false,
